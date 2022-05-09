@@ -17,7 +17,7 @@
 	</VersionInfo>
 	<Libs Value="-mwindows -static -lglut32 -lglu32 -lopengl32 -lwinmm -lgdi32"/>
 	<Flags Value="-DGLUT_STATIC"/>
-	<Target Value="Outro.exe"/>
+	<Target Value="Tank.exe"/>
 	<CommandLine Value=""/>
 	<CompilerOptions Value="-Wall -s"/>
 	<DeleteObjectsBefore Value="Yes"/>

@@ -6,6 +6,8 @@
 #include <mmsystem.h>    //usada para reproduzir sons de fundo
 #include <math.h>
 
+
+
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <stdlib.h>
@@ -23,12 +25,17 @@ using namespace std;
 #define VIDAS 20
 #define PI 3.14159265
 
+
+GLuint elephant;
+float elephantrot;
+char ch = '1';
+
 float QuantVida = VIDAS;
 
 int w = 800, h = 600;
 
-float cx = 2, cy = 8, cz = 25.5 , Ry = 0 , Raux = 90;
-float PBcx = 2, PBcy = 8, PBcz = 20.5 , PBRy = 0 , PBRaux = 90;
+float cx = -1, cy = 8, cz = 25.5 , Ry = 0 , Raux = -90;
+float PBcx = 8, PBcy = 8, PBcz = 20.5 , PBRy = 0 , PBRaux = -90;
 
 bool VidaPersonagemA = true, VidaPersonagemB = true;
 
@@ -47,12 +54,15 @@ float velZB = -1.0;
 //porsche
 
 GLMmodel * pmodel = NULL;
+GLMmodel * tank2 = NULL;
 
 
 float luzX = 0.7f, luzY = 0.75f, luzZ = 8.5f;
 GLfloat light0_position[] = {luzX, luzY, luzZ, 1.0f};
 
 //----
+
+
 
 
 struct Bala
@@ -268,7 +278,7 @@ void update(int value)
 		if(balas[i].ativa)
 		{
 
-			if(colisao(balas[i].x, balas[i].z, 0.7, 0.7, PBcx, PBcz, 0.9, 0.9) == true)
+			if(colisao(balas[i].x, balas[i].z, 0.7, 0.7, PBcx, PBcz, 1.1, 0.9) == true)
 			{
 
 
@@ -283,13 +293,25 @@ void update(int value)
 					if(vidas[j].ativa)
 					{
 						vidas[j].ativa = false;
+						if(j != (VIDAS/2) - 1)
+						{
+							PlaySound("impact2.wav", NULL, SND_ASYNC | SND_FILENAME | SND_SYNC);
+						}
+						else
+						{
+							PlaySound("explosion.wav", NULL, SND_ASYNC | SND_FILENAME | SND_SYNC);
+						}
+
+
 						j = VIDAS / 2;
-						PlaySound("col.wav", NULL, SND_ASYNC | SND_FILENAME | SND_SYNC);
 					}
 					if(j == (VIDAS / 2) - 2)
 					{
+
 						printf("B PERDEU");
 						VidaPersonagemB = false;
+
+
 					}
 				}
 
@@ -305,7 +327,7 @@ void update(int value)
 		if(balas[i].ativa)
 		{
 
-			if(colisao(balas[i].x, balas[i].z, 0.7, 0.7, cx, cz, 0.9, 0.9) == true)
+			if(colisao(balas[i].x, balas[i].z, 0.7, 0.7, cx, cz, 1.1, 0.9) == true)
 			{
 
 
@@ -321,13 +343,21 @@ void update(int value)
 					{
 						vidas[j].ativa = false;
 						j = VIDAS;
-						PlaySound("col.wav", NULL, SND_ASYNC | SND_FILENAME | SND_SYNC);
+						if(j != VIDAS - 1)
+						{
+							PlaySound("impact2.wav", NULL, SND_ASYNC | SND_FILENAME | SND_SYNC);
+						}
+						else
+						{
+							PlaySound("explosion.wav", NULL, SND_ASYNC | SND_FILENAME | SND_SYNC);
+						}
+
 					}
-					if(j == VIDAS - 2)
+					if(j == (VIDAS - 2))
 					{
 						printf("A PERDEU");
 						VidaPersonagemA = false;
-
+					
 					}
 
 				}
@@ -349,13 +379,7 @@ void update(int value)
 
 
 
-	//movimento da Bala
-	/*
-	o angulo inicial eh 90 == (z = -1.0)
-
-	eu nao preciso atualizar isso a todo momento
-
-	*/
+	
 	velZ = cos(Raux * PI / 180);
 	velX = -sin(Raux * PI / 180) ;
 
@@ -374,7 +398,7 @@ void update(int value)
 
 	for(int n = 0; n < BALAS; n++)//limita as balas pela arena
 	{
-		if(balas[n].z <= 15 || balas[n].x > 8 || balas[n].x <= -3 || balas[n].z >= 26)  //tocar em cima
+		if(balas[n].z <= 15 || balas[n].x > 13 || balas[n].x <= -3 || balas[n].z >= 31.5)  //tocar em cima
 		{
 			//velZ = -velZ;
 
@@ -402,259 +426,159 @@ void update(int value)
 	glutTimerFunc(200, update, 0);
 }
 
-void  parede()
+
+
+void tank34(char *fname)
 {
-
-	int w, h;
-	GLuint texture2;
-	unsigned char *uc2 = stbi_load("bloco.jpeg", &w, &h, NULL, 0);
-	glGenTextures(1, &texture2); //gera nomes identificadores de texturas
-	glBindTexture(GL_TEXTURE_2D, texture2); //Ativa a textura atual
-
-	// Cria a textura lateral de cada bloco
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h,
-				 0, GL_RGB, GL_UNSIGNED_BYTE, uc2);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-	glEnable(GL_TEXTURE_2D); //Ativando textura
-
-
-
-	glPushMatrix(); //ymax
-	glColor3f(1, 1, 0);
-	glScalef(39.0, 1.0, 1.0);
-	glTranslatef(0.25, 0.0, 0.0);
-	criaCubo(0.25);
-	//glutSolidCube(0.5);
-	glPopMatrix();
-
-
-
-
-
-
-	glPushMatrix(); //xmin
-	glColor3f(0, 0, 1);
-	glScalef(1.0, 1.0, 40.0);
-	glTranslatef(0.0, 0.0, 0.24);
-	criaCubo(0.25);
-	//glutSolidCube(0.5);
-	glPopMatrix();
-
-
-
-
-
-	glPushMatrix();
-	glColor3f(1, 1, 0);
-	glScalef(39.0, 1.0, 1.0);
-	glTranslatef(0.25, 0.0, 19.0);
-	criaCubo(0.25);
-	//	glutSolidCube(0.5);
-	glPopMatrix();
-	glPushMatrix();
-	glColor3f(1, 1, 0);
-	glScalef(1.0, 1.0, 39.0);
-	glTranslatef(19.0, 0.0, 0.25);
-	criaCubo(0.25);
-	//	glutSolidCube(0.5);
-	glPopMatrix();
-
-	glDisable(GL_TEXTURE_2D);  //desativa a textura dos blocos
-
-
-
-}
-
-//teste porsche
-
-void drawModel(void)
-{
-
-	if (!pmodel)
+	FILE *fp;
+	int read;
+	GLfloat x, y, z;
+	char ch;
+	elephant = glGenLists(1);
+	fp = fopen(fname, "r");
+	if (!fp)
 	{
-		pmodel = glmReadOBJ("t-34.obj");
-		if (!pmodel)
-			exit(0);
-		glmUnitize(pmodel);
-		glmFacetNormals(pmodel);//normal do obejeto
-		glmVertexNormals(pmodel, 90.0);
-	}
-	glTranslatef(cx,cy,cz);
-	glRotatef(Ry, 0, 1.0, 0);
-	glColor3f(0.2, 0.2, 0);
-	glmDraw(pmodel, GLM_SMOOTH | GLM_MATERIAL);
-
-}
-/*
-void drawModel(void)
-{
-
-	if (!pmodel)
-	{
-		pmodel = glmReadOBJ("porshe.obj");
-		if (!pmodel)
-			exit(0);
-		glmUnitize(pmodel);
-		glmFacetNormals(pmodel);//normal do obejeto
-		glmVertexNormals(pmodel, 90.0);
-
+		printf("can't open file %s\n", fname);
+		exit(1);
 	}
 
-	glTranslatef(cx, cy, cz);
-	glRotatef(Ry, 0, 1.0, 0);
-	glColor3f(0.2, 0.2, 0);
-	glmDraw(pmodel, GLM_SMOOTH | GLM_MATERIAL);
-
-
-
-}
-*/
-
-
-
-//--------
-
-void personagem()
-{
-
-
-	GLuint texture2;
-	int w, h;
-	unsigned char *uc2 = stbi_load("cubo.jpeg", &w, &h, NULL, 0);
-	glGenTextures(1, &texture2); //gera nomes identificadores de texturas
-	glBindTexture(GL_TEXTURE_2D, texture2); //Ativa a textura atual
-
-	// Cria a textura lateral de cada bloco
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h,
-				 0, GL_RGB, GL_UNSIGNED_BYTE, uc2);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-	glEnable(GL_TEXTURE_2D); //Ativando textura
-
-	//Desenha Personagem
-	if(VidaPersonagemA)
+	glPointSize(2.0);
+	glNewList(elephant, GL_COMPILE);
 	{
 		glPushMatrix();
-		//glColor3f(1,1,1);
-		glTranslatef(cx, cy, cz);
-		glRotatef(Ry, 0, 1.0, 0);
-		//printf("cx %.2lf %.2lf %.2lf\n",cx,cy,cz);
-		//==================================================================
-		glEnable(GL_LIGHTING);
-		glEnable(GL_LIGHT4);
-
-		criaCubo(0.4);
-		glDisable(GL_LIGHTING);
-
-		//glutSolidCube(0.7);
-		glPopMatrix();
-		//glDeleteTextures(1, & texture1);
-		//stbi_image_free(uc2);
-
-	}
-	else
-	{
-		for(int i = 0 ; i < 4; i++ )
+		glBegin(GL_POLYGON);
+		while(!(feof(fp)))
 		{
-			glPushMatrix();
-			//glColor3f(1,1,1);
-			glTranslatef(cx + i, cy, cz);
-			glRotatef(Ry, 0, 1.0, 0);
-			//printf("cx %.2lf %.2lf %.2lf\n",cx,cy,cz);
-			//==================================================================
-			glEnable(GL_LIGHTING);
-			glEnable(GL_LIGHT4);
+			read = fscanf(fp, "%c %f %f %f", &ch, &x, &y, &z);
+			/*
+			normal color texture vertice
+			*/
+			//	if(read == 4 && ch == 'vn') //normal
+			//	{
+			//		glNormal3f (x, y, z);
+			//	}
+			if(read == 4 && ch == 'v')
+			{
+				glVertex3f(x, y, z);
+			}
 
-			criaCubo(0.2);
-			glDisable(GL_LIGHTING);
-
-			//glutSolidCube(0.7);
-			glPopMatrix();
-			//glDeleteTextures(1, & texture1);
-			//stbi_image_free(uc2);
 		}
-
+		glEnd();
 	}
 
-	//========== FIM DESENHA PERSONAGEM ====================
 
-	glDisable(GL_TEXTURE_2D);  //desativa a textura dos blocos
 
-	//parede();
+
+	glPopMatrix();
+	glEndList();
+	fclose(fp);
 }
 
-void personagemB()
+void tank34_B(char *fname)
 {
+	FILE *fp;
+	int read;
+	GLfloat x, y, z;
+	char ch;
+	elephant = glGenLists(1);
+	fp = fopen(fname, "r");
+	if (!fp)
+	{
+		printf("can't open file %s\n", fname);
+		exit(1);
+	}
 
-
-	GLuint texture2;
-	int w, h;
-	unsigned char *uc2 = stbi_load("p.jpeg", &w, &h, NULL, 0);
-	glGenTextures(1, &texture2); //gera nomes identificadores de texturas
-	glBindTexture(GL_TEXTURE_2D, texture2); //Ativa a textura atual
-
-	// Cria a textura lateral de cada bloco
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h,
-				 0, GL_RGB, GL_UNSIGNED_BYTE, uc2);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-	glEnable(GL_TEXTURE_2D); //Ativando textura
-
-	if(VidaPersonagemB)
+	glPointSize(2.0);
+	glNewList(elephant, GL_COMPILE);
 	{
 		glPushMatrix();
-		//glColor3f(1,1,1);
-		glTranslatef(PBcx, PBcy, PBcz);
-		glRotatef(PBRy, 0, 1.0, 0);
-		//printf("cx %.2lf %.2lf %.2lf\n",cx,cy,cz);
-		//==================================================================
-		glEnable(GL_LIGHTING);
-		glEnable(GL_LIGHT4);
+		glBegin(GL_POLYGON);
+		while(!(feof(fp)))
+		{
+			read = fscanf(fp, "%c %f %f %f", &ch, &x, &y, &z);
+			/*
+			normal color texture vertice
+			*/
+			//	if(read == 4 && ch == 'vn') //normal
+			//	{
+			//		glNormal3f (x, y, z);
+			//	}
+			if(read == 4 && ch == 'v')
+			{
+				glVertex3f(x, y, z);
+			}
 
-		criaCubo(0.4);
-		glDisable(GL_LIGHTING);
-
-		//glutSolidCube(0.7);
-		glPopMatrix();
-		//glDeleteTextures(1, & texture1);
-		//stbi_image_free(uc2);
+		}
+		glEnd();
 	}
-	//Desenha Personagem
 
 
-	//========== FIM DESENHA PERSONAGEM ====================
 
-	glDisable(GL_TEXTURE_2D);  //desativa a textura dos blocos
 
-//	parede();
+	glPopMatrix();
+	glEndList();
+	fclose(fp);
 }
+
+void drawCar()
+{
+	glPushMatrix();
+	glTranslatef(cx, cy, cz); //0,-40.00,-105
+
+	glScalef(0.004, 0.004, 0.004);
+	glRotatef(Ry, 0, 1.0, 0);
+	glColor3f(0.7, 0.1, 0);
+
+
+	glCallList(elephant);
+
+
+}
+
+void drawCar_B()
+{
+	glPushMatrix();
+	glTranslatef(PBcx, PBcy, PBcz); //0,-40.00,-105
+
+	glScalef(0.005, 0.005, 0.005);
+	glRotatef(PBRy, 0, 1.0, 0);
+	glColor3f(0.1, 0.4, 0.8);
+
+
+	glCallList(elephant);
+
+
+}
+
+
+
+
+
+
 
 void drawGrid()
 {
 	int i;
-	for(i = 0; i < 40; i++)
+	int quant = 56;
+	for(i = 0; i < quant; i++)
 	{
 		glPushMatrix();
-		if(i < 20)
+		if(i < quant/2)
 		{
 			glTranslatef(0, 0, i);
 		}
 
-		if(i >= 20)
+		if(i >= quant/2)
 		{
-			glTranslatef(i - 20, 0, 0);
+			glTranslatef(i - quant/2, 0, 0);
 			glRotatef(-90, 0, 1, 0);
 		}
 
 		glBegin(GL_LINES);
-		glColor3f(0.01, 0.01, 0.71);
+		glColor3f(0.01, 0.51, 0.21);
 		glLineWidth(1);
 		glVertex3f(0, -0.1, 0);
-		glVertex3f(19, -0.1, 0);
+		glVertex3f((quant/2) - 1, -0.1, 0);
 		glEnd();
 		glPopMatrix();
 	}
@@ -763,36 +687,36 @@ void display()
 
 
 	drawGrid();
-//	inimigo();
+
+	if(VidaPersonagemA)
+		drawCar();
+
+
+	if(VidaPersonagemB)
+		drawCar_B();
 
 
 
 
-//	personagem();
-	personagemB();
 
-
-//	criaCubo(2);
 
 	DesenharVida();
 
 	DesenhaBalas();
 
-	//   teste();
-	drawModel();
-//	displayPorsche();
+
+
 	glutSwapBuffers();
 }
 
 void init()
 {
-//	PlaySound("s.wav", NULL, SND_ASYNC|SND_FILENAME|SND_LOOP);
+
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	gluPerspective(45.0, 1.0f, 0.1f, 1000.0); /*  35,1.0f,0.1f,1000 aqui a gente muda o angulo da camera */
-	// Especifica posição do observador e do alvo
-//	gluLookAt (0,0,-20 ,0,0,0 ,0,1,0);
+
+	gluPerspective(65.0, 1.0f, 0.1f, 1000.0);
 
 
 	glMatrixMode(GL_MODELVIEW);
@@ -800,12 +724,6 @@ void init()
 	glClearColor(0, 0, 0, 1);
 	glEnable(GL_COLOR_MATERIAL);
 
-	// glEnable(GL_LIGHTING);
-	// glShadeModel(GL_SMOOTH);
-
-	//glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
-	//  glEnable(GL_LIGHT0);
-//	glShadeModel(GL_SMOOTH);
 
 
 	glEnable(GL_CULL_FACE);                // Habilita Backface-Culling
@@ -838,15 +756,16 @@ void keyboard(unsigned char key, int x, int y)
 		else
 		{
 			cz -= 0.2;
+
 		}
 
 	} //frente
 
 	if(key == 's')
 	{
-		if(cz + 0.5 >= 25)
+		if(cz + 0.5 >= 31.5)
 		{
-			cz = 25.5;
+			cz = 31.5;
 		}
 		else
 		{
@@ -869,7 +788,7 @@ void keyboard(unsigned char key, int x, int y)
 	}
 	if(key == 'd')  //Lado dir. inferior
 	{
-		if(cx + 0.5 >= 9)
+		if(cx + 0.5 >= 13)
 		{
 			cx = cx;
 		}
@@ -897,6 +816,7 @@ void keyboard(unsigned char key, int x, int y)
 				break;
 
 			}
+
 		}
 	}
 	if(key == 'q') // sentido anti-horário
@@ -929,18 +849,15 @@ void keyboard(unsigned char key, int x, int y)
 
 	if(key == 'k')
 	{
-		if(PBcz + 0.5 >= 25)
+		if(PBcz + 0.5 >= 31.5)
 		{
-			PBcz = 25.5;
+			PBcz = 31.5;
 		}
 		else
 		{
 			PBcz += 0.2;
 		}
-	} //forward / back
-	//Fim do frente tras
-
-	//left / right
+	} 
 	if(key == 'j')
 	{
 		if(PBcx - 1 <= -3)  //Lado esq. inferior
@@ -954,7 +871,7 @@ void keyboard(unsigned char key, int x, int y)
 	}
 	if(key == 'l')  //Lado dir. inferior
 	{
-		if(PBcx + 0.5 >= 9)
+		if(PBcx + 0.5 >= 13)
 		{
 			PBcx = cx;
 		}
@@ -1000,7 +917,7 @@ void keyboard(unsigned char key, int x, int y)
 
 
 
-	/*/ if(key == 'q'){cy+=1;} if(key == 'z'){cy-=1;} //up   / down */
+
 
 	glutPostRedisplay();
 }
@@ -1032,7 +949,7 @@ void iniciarVida ()
 {
 
 	//cria blocos
-	float x = cx - 5.5 , z = cz + 3;//+3
+	float x = cx - 1.5 , z = cz + 8;//+3
 	for(int n = 0;  n < QuantVida / 2; n++)
 	{
 
@@ -1060,7 +977,8 @@ void iniciarVida ()
 	}
 }
 
-//porsche
+
+
 
 int main(int argc, char** argv)
 {
@@ -1069,15 +987,14 @@ int main(int argc, char** argv)
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowSize(800, 600);
+	glutInitWindowSize(1280, 720);
 	glutCreateWindow("");
 	glutDisplayFunc(display);
-	//porsche
-//	drawModel();
-//	glutReshapeFunc(reshape);
-//-----
+	
 	glutKeyboardFunc(keyboard);
 	init();
+	tank34("T-34.obj");
+	tank34_B("T-34.obj");
 	glutTimerFunc(25, update, 0);
 	glutMainLoop();
 	return 0;
